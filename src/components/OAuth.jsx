@@ -16,7 +16,7 @@ function OAuth() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const docRef = doc(db, 'user', user.uid);
+      const docRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) {
         await setDoc(doc(db, 'users', user.uid), {
