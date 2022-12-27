@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Spinner from '../components/Spinner';
+import MapboxGeoCoding from '@mapbox/mapbox-sdk/services/geocoding';
 
 function CreateListing() {
-  const [geolocationEnabled, setGeolocationEnabled] = useState(true);
+  const [geolocationEnabled, setGeolocationEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     type: 'rent',
@@ -58,8 +60,47 @@ function CreateListing() {
     };
   }, [isMounted]);
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    if (discountedPrice >= regularPrice) {
+      setLoading(false);
+      toast.error('Discounted price needs to be less than regular price');
+      return;
+    }
+
+    if (images.length > 6) {
+      setLoading(false);
+      toast.error('Max 6 images allowed');
+      return;
+    }
+
+    let geolocation = {};
+    let location;
+
+    // todo: add some free geolocation api
+    if (geolocationEnabled) {
+      const mapBoxToken = process.env.REACT_APP_MAPBOX_TOKEN;
+      const geocoder = MapboxGeoCoding({ accessToken: mapBoxToken });
+      const response = await fetch(
+        geocoder.forwardGeocode({
+          query: address,
+          limit: 1
+        })
+      );
+      const data = response.json();
+      console.log(data);
+
+      // geolocation.lat = data.results api response path
+      // geolocation.lng = data.results;
+
+      // location = data.status === 'ZERO_RESULTS' ? undefined : data.results formatted address
+    } else {
+      geolocation.lat = latitude;
+      geolocation.lng = longitude;
+      location = address;
+    }
+    setLoading(false);
   };
 
   const onMutate = (e) => {
